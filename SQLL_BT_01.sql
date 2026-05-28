@@ -361,7 +361,7 @@ SELECT
     COUNT(TN.MATN) AS SO_LUONG_THAN_NHAN
     FROM EMPLOYEE E  
     LEFT JOIN THANNHAN TN ON TN.MANV = E.MANV
-    GROUP BY E.HONV,E.TENLOT,E.TENNV
+    GROUP BY E.HONV,E.TENLOT,E.TENNV, E.MANV
 -- Như vậy nếu muốn in ra cột gì trước tính toán thì phải group by cái đó 
 
 --20. Với mỗi phòng ban, liệt kê tên phòng ban (TENPHG) và lương trung bình của những nhân viên làm việc cho phòng ban đó
@@ -388,3 +388,222 @@ SELECT
     INNER JOIN EMPLOYEE E ON E.PHONG = PHG.MAPHONG
     GROUP BY PHG.TENPHG
     HAVING AVG(E.MLUONG)>2500000
+
+-- Liệt kê danh sách các đề án (MADA) có: nhân công với họ (HONV) là ‘Dinh’ hoặc có người trưởng phòng chủ trì đề án với họ (HONV) là ‘Dinh’
+
+SELECT 
+    MADA
+    FROM DEAN
+    WHERE 
+        MADA IN (
+            SELECT MADA
+            FROM PHANCONG
+            WHERE 
+                    MANV IN(
+                        SELECT MANV
+                        FROM EMPLOYEE E
+                        WHERE E.HONV = 'Dinh'
+                    )
+        )
+        OR
+        MAPHG IN(
+            SELECT MAPHG
+            FROM PHONGBAN
+            WHERE  
+                TRPHG IN (
+                    SELECT MANV
+                    FROM EMPLOYEE E
+                    WHERE E.HONV = 'Dinh'
+
+            )
+        )
+
+
+-- sua bai
+SELECT 
+    MADA
+    FROM DEAN
+    WHERE 
+        MADA IN (
+            SELECT MADA 
+            FROM PHANCONG PC
+            INNER JOIN EMPLOYEE E 
+                ON PC.MANV = E.MANV
+            WHERE E.HONV = 'Dinh'
+    )
+    OR
+    MAPHG IN (
+        SELECT MAPHG
+        FROM PHONGBAN PHG 
+        INNER JOIN EMPLOYEE E2
+            ON PHG.TRPHG = E2.MANV
+        WHERE E2.HONV = 'Dinh'
+    )
+
+--- 24. Liệt kê danh sách những nhân viên (HONV, TENLOT, TENNV) có trên 2 thân nhân
+SELECT 
+    E.HONV + ' ' + E.TENLOT + ' ' + E.TENNV AS HOVATEN_NV
+    FROM EMPLOYEE E 
+    WHERE E.MANV IN(
+        SELECT MANV
+        FROM THANNHAN TN
+        GROUP BY TN.MANV
+        HAVING COUNT(TN.MANV) >2
+    )
+
+--- 25. Liệt kê danh sách những nhân viên (HONV, TENLOT, TENNV) không có thân nhân nào
+-- long tuong quan
+SELECT 
+    E.HONV + ' ' + E.TENLOT + ' ' + E.TENNV AS HOVATEN_NV
+    FROM EMPLOYEE E 
+    WHERE NOT EXISTS(
+        SELECT* 
+        FROM THANNHAN TN 
+        WHERE TN.MANV = E.MANV
+    )
+
+--26. Liệt kê danh sách những trưởng phòng (HONV, TENLOT, TENNV) có tối thiểu một thân nhân
+
+SELECT 
+    E.HONV + ' ' + E.TENLOT + ' ' + E.TENNV AS HOVATEN_TRPHG
+    FROM EMPLOYEE E
+    WHERE EXISTS (
+        SELECT* 
+        FROM THANNHAN TN
+        WHERE TN.MANV = E.MANV 
+    )
+    AND EXISTS(
+        SELECT * 
+        FROM PHONGBAN PHG
+        WHERE PHG.TRPHG = E.MANV
+    )
+
+--27. Liệt kê họ tên của những trưởng phòng chưa có gia đình
+SELECT 
+    E.HONV + ' ' + E.TENLOT + ' ' + E.TENNV AS HOVATEN_TRPHG
+    FROM EMPLOYEE E  
+    WHERE EXISTS(
+        SELECT PHG.TRPHG
+        FROM PHONGBAN PHG
+        WHERE PHG.TRPHG = E.MANV
+    )
+    AND NOT EXISTS(
+        SELECT TN.MANV 
+        FROM THANNHAN TN 
+        WHERE TN.MANV = E.MANV
+    )
+---Liệt kê họ tên nhân viên (HONV, TENLOT, TENNV) có mức lương trên mức lương trung bình của phòng "Nghien cuu"
+SELECT 
+    E.HONV + ' ' + E.TENLOT + ' ' + E.TENNV AS HOVATEN_NV,
+    E.MLUONG
+    FROM EMPLOYEE E 
+    WHERE E.MLUONG > (
+        SELECT AVG(E2.MLUONG) AS MLUONG_TB
+        FROM EMPLOYEE E2
+        INNER JOIN PHONGBAN PHG
+            ON E2.PHONG = PHG.MAPHONG
+        WHERE PHG.TENPHG = 'Nghien cuu'
+    )
+
+---29. Liệt kê tên phòng ban và họ tên trưởng phòng của phòng ban có đông nhân viên nhất
+SELECT
+    PHG.TENPHG,
+    E.HONV + ' ' + E.TENLOT + ' ' + E.TENNV AS HOVATEN_TRPHG
+    FROM EMPLOYEE E
+    INNER JOIN PHONGBAN PHG
+        ON PHG.TRPHG = E.MANV
+    WHERE PHG.MAPHONG = (
+        SELECT TOP (1) 
+        E2.PHONG
+        FROM EMPLOYEE E2
+        GROUP BY E2.PHONG
+    )
+
+---30. Liệt kê họ tên (HONV, TENLOT, TENNV) và địa chỉ (DCHI) của những nhân viên làm việc cho một đề án ở
+--‘TP HCM’ nhưng phòng ban mà họ trực thuộc lại không tọa lạc ở thành phố ‘TP HCM’
+SELECT * FROM DEAN
+SELECT * FROM DIADIEM_PHG
+SELECT  
+    E.HONV + ' ' + E.TENLOT + ' ' + E.TENNV AS HOVATEN_NV,
+    E.DCHI,
+    E.PHONG
+FROM EMPLOYEE E  
+WHERE E.MANV IN(
+    SELECT E2.MANV
+    FROM EMPLOYEE E2
+    INNER JOIN PHANCONG PC
+        ON E2.MANV = PC.MANV
+    INNER JOIN DEAN DA 
+        ON DA.MADA = PC.MADA
+    WHERE DA.DIADIEM_DA LIKE '%TPHCM%'
+)
+AND NOT E.MANV IN(
+    SELECT E3.MANV
+    FROM EMPLOYEE E3
+    INNER JOIN PHONGBAN PHG
+        ON E3.PHONG = PHG.MAPHONG
+    INNER JOIN DIADIEM_PHG DD_PHG 
+        ON PHG.MAPHONG = DD_PHG.MAPHG
+    WHERE DD_PHG.DIADIEM LIKE '%TP HCM%'
+)
+
+
+--31. (dạng tổng quát của câu 30) Liệt kê họ tên và địa chỉ của các nhân viên làm việc cho một đề án ở một thành phố nhưng phòng ban mà họ trực thuộc lại không toạ lạc ở thành phố đó
+SELECT 
+    E.HONV + ' ' + E.TENLOT + ' ' + E.TENNV AS HOVATEN_NV,
+    E.DCHI
+    FROM EMPLOYEE E  
+    WHERE EXISTS (
+        SELECT *
+        FROM PHANCONG PC 
+        INNER JOIN DEAN DA 
+            ON PC.MADA = DA.MADA
+        WHERE PC.MANV = E.MANV
+        AND DA.DIADIEM_DA NOT IN(
+            SELECT DD.DIADIEM
+            FROM DIADIEM_PHG DD 
+            WHERE DA.DIADIEM_DA = DD.DIADIEM
+    )
+    )
+
+
+--32. Liệt kê danh sách những nhân viên (HONV, TENLOT, TENNV) làm việc trong mọi đề án của công ty
+SELECT 
+    E.HONV + ' ' + E.TENLOT + ' ' + E.TENNV AS HOVATEN_NV
+FROM EMPLOYEE E  
+WHERE 
+    (SELECT COUNT(MADA) FROM PHANCONG WHERE MANV = E.MANV) 
+    =  (SELECT COUNT(MADA) FROM DEAN);
+
+-- 33. Liệt kê danh sách những nhân viên (HONV, TENLOT, TENNV) được phân công tất cả đề án do phòng số “Nghien cuu” chủ trì
+
+SELECT 
+    E.HONV + ' ' + E.TENLOT + ' ' + E.TENNV AS HOVATEN_NV
+    FROM EMPLOYEE E  
+    WHERE 
+        (SELECT COUNT(PC.MADA)
+        FROM PHANCONG PC 
+        INNER JOIN DEAN DA 
+            ON PC.MADA = DA.MADA
+        WHERE DA.MAPHG = 'NC'AND PC.MANV = E.MANV) 
+        = 
+        (SELECT COUNT(DA.MADA)
+        FROM DEAN DA 
+        WHERE DA.MAPHG = 'NC'
+        )
+
+--34. Liệt kê danh sách họ tên nhân viên tham gia tất cả các đề án do phòng ban của nhân viên đó trực thuộc chủ trì
+SELECT 
+    E.HONV + ' ' + E.TENLOT + ' ' + E.TENNV AS HOVATEN_NV
+    FROM EMPLOYEE E  
+    WHERE 
+        (SELECT COUNT(PC.MADA)
+        FROM PHANCONG PC 
+        INNER JOIN DEAN DA 
+            ON PC.MADA = DA.MADA
+        WHERE DA.MAPHG = E.PHONG AND PC.MANV = E.MANV) 
+        = 
+        (SELECT COUNT(DA.MADA)
+        FROM DEAN DA 
+        WHERE DA.MAPHG = E.PHONG
+        )
