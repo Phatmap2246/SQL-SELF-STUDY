@@ -375,7 +375,7 @@ WHERE DODAI <= ALL (
     WHERE HIEU LIKE '%Boeing%'
 );
 ```
-**4.Một hành khách muốn đi từ Hà Nội (HAN) đến Nha Trang (CXR) mà không phải đổi chuyến bay quá một lần. Cho biết mã chuyến bay và thời gian khởi hành từ Hà Nội nếu hành khách muốn đến Nha Trang trước 16:00.
+**4.Một hành khách muốn đi từ Hà Nội (HAN) đến Nha Trang (CXR) mà không phải đổi chuyến bay quá một lần. Cho biết mã chuyến bay và thời gian khởi hành từ Hà Nội nếu hành khách muốn đến Nha Trang trước 16:00.**
 ```sql
 SELECT 
     MACB,
