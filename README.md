@@ -48,7 +48,7 @@
 
 ---
 
-## 🏛️ Các lược đồ dữ liệu chi tiết
+##  Các lược đồ dữ liệu chi tiết
 
 ### 1. Quản lý Sinh viên (`Practice_SQL_2.sql`)
 
