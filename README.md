@@ -3,7 +3,7 @@
 </div>
 
 <div align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=24&pause=20&color=00A86B&center=true&vCenter=true&width=500&lines=Relational+Algebra+%2B+SQL+Mastery;3+Database+Schemas;50%2B+Complex+Queries;From+Basic+to+Advanced" alt="Typing SVG" />
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=24&pause=0.5&color=00A86B&center=true&vCenter=true&width=500&lines=Relational+Algebra+%2B+SQL+Mastery;3+Database+Schemas;50%2B+Complex+Queries;From+Basic+to+Advanced" alt="Typing SVG" />
 </div>
 
 <br/>
